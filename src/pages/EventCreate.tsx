@@ -197,6 +197,14 @@ export default function EventCreate() {
 
   return (
     <div style={s.page}>
+      {/* ── Back ── */}
+      <button
+        onClick={() => navigate('/events')}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#6b6b63', padding: '0 0 16px', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}
+      >
+        ← Mes événements
+      </button>
+
       {/* Private badge */}
       <div style={{ marginBottom: 16 }}>
         <span style={{

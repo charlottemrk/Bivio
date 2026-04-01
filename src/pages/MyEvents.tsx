@@ -167,12 +167,15 @@ export default function MyEvents() {
               <div key={event.id} style={{ display: 'flex', gap: 0, marginBottom: 12 }}>
 
                 {/* ── Date column ── */}
-                <div style={{ width: 54, flexShrink: 0 }}>
-                  <div style={{ paddingTop: 18, textAlign: 'left' }}>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: isPast ? 'var(--color-text-3)' : 'var(--color-text)', lineHeight: 1 }}>
-                      {day} {month}
+                <div style={{ width: 58, flexShrink: 0 }}>
+                  <div style={{ paddingTop: 20, textAlign: 'left' }}>
+                    <div style={{ fontSize: 22, fontWeight: 900, color: isPast ? 'var(--color-text-3)' : 'var(--color-text)', lineHeight: 1 }}>
+                      {day}
                     </div>
-                    <div style={{ fontSize: 11, color: 'var(--color-text-3)', marginTop: 2, textTransform: 'capitalize' }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: isPast ? 'var(--color-border)' : 'var(--color-text-3)', marginTop: 1, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      {month}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--color-border)', marginTop: 2, textTransform: 'capitalize' }}>
                       {weekday}.
                     </div>
                   </div>
@@ -182,10 +185,10 @@ export default function MyEvents() {
                 <div style={{
                   width: 20, flexShrink: 0,
                   display: 'flex', flexDirection: 'column', alignItems: 'center',
-                  paddingTop: 22,
+                  paddingTop: 26,
                 }}>
                   <div style={{
-                    width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
+                    width: 9, height: 9, borderRadius: '50%', flexShrink: 0,
                     background: isPast ? 'var(--color-border)' : 'var(--color-text-3)',
                     border: '2px solid var(--color-bg)',
                     zIndex: 1,
@@ -215,25 +218,25 @@ export default function MyEvents() {
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 16px rgba(26,26,24,0.10)' }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 3px rgba(26,26,24,0.04)' }}
                 >
-                  <div style={{ display: 'flex', gap: 12, padding: '14px 14px' }}>
+                  <div style={{ display: 'flex', gap: 12, padding: '16px' }}>
                     {/* Info */}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{
-                        fontSize: 16, fontWeight: 400,
+                        fontSize: 17, fontWeight: 400,
                         fontFamily: "'Instrument Serif', serif", fontStyle: 'italic',
                         color: 'var(--color-text)', lineHeight: 1.25,
-                        marginBottom: 5,
+                        marginBottom: 6,
                         display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
                       }}>
                         {event.name}
                       </div>
-                      <div style={{ fontSize: 12, color: 'var(--color-text-2)', marginBottom: 3, fontWeight: 500 }}>
+                      <div style={{ fontSize: 12, color: 'var(--color-text-2)', marginBottom: 4, fontWeight: 500 }}>
                         {formatDateRange(event.date_start, event.date_end)}
                       </div>
                       <div style={{
                         fontSize: 12, color: 'var(--color-text-3)',
                         whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                        marginBottom: 8,
+                        marginBottom: 10,
                       }}>
                         📍 {location}
                       </div>
@@ -242,7 +245,7 @@ export default function MyEvents() {
                         fontSize: 10, fontWeight: 700,
                         color: isOrg ? 'var(--color-violet)' : 'var(--color-text-3)',
                         background: isOrg ? 'var(--color-violet-light)' : 'var(--color-surface-2)',
-                        borderRadius: 6, padding: '2px 8px',
+                        borderRadius: 6, padding: '3px 8px',
                       }}>
                         {isOrg ? 'Organisateur' : 'Invité'}
                       </div>
@@ -250,11 +253,11 @@ export default function MyEvents() {
 
                     {/* Cover */}
                     <div style={{
-                      width: 80, height: 80, borderRadius: 12, flexShrink: 0,
+                      width: 88, height: 88, borderRadius: 12, flexShrink: 0,
                       overflow: 'hidden',
                       background: event.cover_image ? undefined : fallbackBg,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 28,
+                      fontSize: 30,
                     }}>
                       {event.cover_image
                         ? <img src={event.cover_image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />

@@ -144,9 +144,16 @@ export default function EventInvite() {
     <div style={{
       maxWidth: 560,
       margin: '0 auto',
-      padding: '48px 24px 80px',
+      padding: '16px 24px 80px',
       fontFamily: "'DM Sans', system-ui, sans-serif",
     }}>
+      {/* ── Back ── */}
+      <button
+        onClick={() => navigate(`/event/${shortId}`)}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--color-text-3)', padding: '0 0 20px', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}
+      >
+        ← L'événement
+      </button>
 
       {/* Success indicator */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>

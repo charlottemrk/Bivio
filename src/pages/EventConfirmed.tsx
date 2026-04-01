@@ -68,6 +68,14 @@ export default function EventConfirmed() {
   return (
     <div className="animate-fade-up" style={{ paddingTop: 8 }}>
 
+      {/* ── Back ── */}
+      <button
+        onClick={() => navigate(`/event/${shortId}`)}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--color-text-3)', padding: '4px 0 8px', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}
+      >
+        ← L'événement
+      </button>
+
       {/* Success */}
       <div style={{ textAlign: 'center', paddingTop: 32, paddingBottom: 32 }}>
         <div style={{

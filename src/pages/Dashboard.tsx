@@ -151,6 +151,14 @@ export default function Dashboard() {
   return (
     <div className="animate-fade-up" style={{ paddingTop: 8, paddingBottom: 40 }}>
 
+      {/* ── Back ── */}
+      <button
+        onClick={() => navigate(`/event/${shortId}`)}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--color-text-3)', padding: '4px 0 16px', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}
+      >
+        ← L'événement
+      </button>
+
       {/* ── Header ── */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, paddingBottom: 20 }}>
         <div style={{ flex: 1, minWidth: 0 }}>

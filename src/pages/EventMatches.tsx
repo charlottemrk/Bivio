@@ -418,6 +418,14 @@ export default function EventMatches() {
     <div className="animate-fade-up" style={{ paddingTop: 8 }}>
       {toast && <Toast msg={toast} onDismiss={() => setToast(null)} />}
 
+      {/* ── Back ── */}
+      <button
+        onClick={() => navigate(`/event/${shortId}`)}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--color-text-3)', padding: '4px 0 12px', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}
+      >
+        ← L'événement
+      </button>
+
       <div style={{ paddingBottom: 20 }}>
         <h1 style={{ fontSize: 24, fontWeight: 900, color: 'var(--color-text)', marginBottom: 4, letterSpacing: '-0.5px' }}>
           {myMatchStatus === 'pending' ? 'Demande envoyée' : 'Conducteurs disponibles'}
