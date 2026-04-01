@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { Button } from '../components/Button'
 import { formatDateRange } from '../lib/utils'
+import { DEV_BYPASS_AUTH } from '../config'
 
 type EventRow = {
   id: string; short_id: string; name: string; emoji: string
@@ -25,16 +26,26 @@ export default function MyEvents() {
   const [loading, setLoading]     = useState(true)
 
   useEffect(() => {
-    if (!user) { setLoading(false); return }
     const load = async () => {
+      if (!user && !DEV_BYPASS_AUTH) { setLoading(false); return }
+
+      if (DEV_BYPASS_AUTH && !user) {
+        // Dev mode: show all events (no auth filter)
+        const { data } = await supabase.from('events').select('*').order('date_start', { ascending: false })
+        setOrganized(data || [])
+        setJoined([])
+        setLoading(false)
+        return
+      }
+
       const [orgRes, joinRes] = await Promise.all([
-        supabase.from('events').select('*').eq('organizer_id', user.id).order('date_start', { ascending: false }),
-        supabase.from('event_guests').select('event_id, events(*)').eq('profile_id', user.id),
+        supabase.from('events').select('*').eq('organizer_id', user!.id).order('date_start', { ascending: false }),
+        supabase.from('event_guests').select('event_id, events(*)').eq('profile_id', user!.id),
       ])
       setOrganized(orgRes.data || [])
       const joinedEvents = (joinRes.data || [])
         .map((g: any) => g.events).filter(Boolean)
-        .filter((e: EventRow) => e.organizer_id !== user.id)
+        .filter((e: EventRow) => e.organizer_id !== user!.id)
       setJoined(joinedEvents)
       setLoading(false)
     }
@@ -46,14 +57,14 @@ export default function MyEvents() {
   const upcoming = all.filter(e => new Date(e.date_start) >= now)
   const past     = all.filter(e => new Date(e.date_start) < now).reverse()
 
-  const firstName = profile?.name?.split(' ')[0] || 'toi'
+  const firstName = profile?.name?.split(' ')[0] || (DEV_BYPASS_AUTH ? 'Dev' : 'toi')
 
   // Day greeting
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bonjour' : 'Bonsoir'
 
   const EventCard = ({ event, isPast }: { event: EventRow; isPast?: boolean }) => {
-    const isOrg     = event.organizer_id === user?.id
+    const isOrg = event.organizer_id === user?.id || (DEV_BYPASS_AUTH && !user)
     const dateObj   = new Date(event.date_start)
     const day       = dateObj.getDate()
     const month     = dateObj.toLocaleString('fr-FR', { month: 'short' })
