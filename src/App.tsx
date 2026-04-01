@@ -128,53 +128,29 @@ function AppShell() {
           {/* Right: auth / create CTA */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: user ? 'none' : 1, justifyContent: 'flex-end' }}>
             {user ? (
-              <>
-                <button
-                  onClick={() => navigate('/events/new')}
-                  style={{
-                    padding: '8px 18px', borderRadius: 12, fontSize: 14, fontWeight: 800,
-                    background: 'var(--color-violet)', color: 'white',
-                    border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-                  }}
-                >
-                  + Créer un event
-                </button>
-                <button
-                  onClick={() => navigate('/profile')}
-                  aria-label="Mon profil"
-                  style={{
-                    width: 36, height: 36, borderRadius: '50%',
-                    background: 'var(--color-violet-light)', color: 'var(--color-violet)',
-                    fontWeight: 800, fontSize: 14, border: 'none', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}
-                >
-                  {initial}
-                </button>
-              </>
+              <button
+                onClick={() => navigate('/profile')}
+                aria-label="Mon profil"
+                style={{
+                  width: 36, height: 36, borderRadius: '50%',
+                  background: 'var(--color-violet-light)', color: 'var(--color-violet)',
+                  fontWeight: 800, fontSize: 14, border: 'none', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >
+                {initial}
+              </button>
             ) : (
-              <>
-                <button
-                  onClick={() => navigate('/auth')}
-                  style={{
-                    padding: '8px 14px', fontSize: 14, fontWeight: 700,
-                    color: 'var(--color-text-2)', background: 'none',
-                    border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-                  }}
-                >
-                  Se connecter
-                </button>
-                <button
-                  onClick={() => navigate('/events/new')}
-                  style={{
-                    padding: '8px 18px', borderRadius: 12, fontSize: 14, fontWeight: 800,
-                    background: 'var(--color-violet)', color: 'white',
-                    border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-                  }}
-                >
-                  Créer un event →
-                </button>
-              </>
+              <button
+                onClick={() => navigate('/auth')}
+                style={{
+                  padding: '8px 14px', fontSize: 14, fontWeight: 700,
+                  color: 'var(--color-text-2)', background: 'none',
+                  border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+                }}
+              >
+                Se connecter
+              </button>
             )}
           </div>
         </div>
