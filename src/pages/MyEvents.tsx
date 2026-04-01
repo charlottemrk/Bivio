@@ -76,15 +76,11 @@ export default function MyEvents() {
         display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12,
       }}>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-3)', marginBottom: 4 }}>
-            {greeting} 👋
-          </div>
           <h1 style={{
-            fontFamily: "'Instrument Serif', serif", fontStyle: 'italic',
-            fontSize: 32, fontWeight: 400, color: 'var(--color-text)',
-            letterSpacing: '-0.3px', lineHeight: 1.1, marginBottom: 14,
+            fontSize: 28, fontWeight: 900, color: 'var(--color-text)',
+            letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: 14,
           }}>
-            {firstName}
+            Mes événements
           </h1>
           <button
             onClick={() => navigate('/events/new')}
