@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+@theme {
+  /* ── Backgrounds ── */
+  --color-bg:             #f5f3ee;
+  --color-surface:        #ffffff;
+  --color-surface-2:      #edeae3;
+
+  /* ── Primary (green) ── */
+  --color-primary:        #7cc400;
+  --color-primary-light:  #eaf5c4;
+  --color-primary-dark:   #4a8a00;
+  --color-primary-text:   #2d5200;
+
+  /* ── Semantic ── */
+  --color-peach:          #f4a261;
+  --color-peach-light:    #fef3eb;
+
+  --color-green:          #5dcaa5;
+  --color-green-light:    #d6f5ea;
+
+  --color-red:            #ef4444;
+  --color-red-light:      #fee2e2;
+
+  --color-amber:          #d97706;
+  --color-amber-light:    #fef3c7;
+
+  /* ── Text ── */
+  --color-text:           #1a1a18;
+  --color-text-2:         #3d3d38;
+  --color-text-3:         #6b6b63;
+
+  /* ── Borders ── */
+  --color-border:         #e0ddd6;
+  --color-border-2:       #ccc8bf;
+
+  /* ── Typography ── */
+  --font-sans:            'DM Sans', system-ui, sans-serif;
+  --font-serif:           'Instrument Serif', Georgia, serif;
+
+  /* ── Legacy aliases so existing var(--color-violet) refs stay green ── */
+  --color-violet:         #7cc400;
+  --color-violet-light:   #eaf5c4;
+  --color-violet-dark:    #4a8a00;
+}
+
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    width: 100%;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--color-bg);
+    color: var(--color-text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  #root {
+    min-height: 100vh;
+    width: 100%;
+  }
+
+  input, button, textarea, select { font-family: inherit; }
+  input:focus, textarea:focus, select:focus { outline: none; }
+  ::placeholder { color: var(--color-text-3); }
+  button { -webkit-tap-highlight-color: transparent; }
+}
+
+/* ── Animations ── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: fadeUp 0.22s ease-out both; }
+
+/* ── Card shadow ── */
+.card-shadow {
+  box-shadow: 0 1px 3px rgba(26,26,24,0.06), 0 4px 16px rgba(26,26,24,0.07);
+}
+.card-shadow-hover:hover {
+  box-shadow: 0 4px 12px rgba(26,26,24,0.10), 0 8px 28px rgba(26,26,24,0.08);
+}

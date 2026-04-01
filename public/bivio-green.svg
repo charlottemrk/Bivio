@@ -1,0 +1,10 @@
+<svg width="160" height="44" viewBox="0 0 160 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="6"  cy="6"  r="4" fill="#3a6800"/>
+  <circle cx="30" cy="6"  r="4" fill="#3a6800"/>
+  <circle cx="6"  cy="30" r="4" fill="#3a6800"/>
+  <path d="M6 26 Q6 18 18 18 Q30 18 30 10" stroke="#2d5200" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <path d="M9 7 Q13 12 18 18" stroke="#2d5200" stroke-width="1.5" stroke-linecap="round" fill="none" stroke-dasharray="2 2"/>
+  <circle cx="18" cy="18" r="4.5" fill="#2d5200"/>
+  <circle cx="18" cy="18" r="2"   fill="#7cc400"/>
+  <text x="44" y="30" font-family="'Instrument Serif', Georgia, serif" font-style="italic" font-size="32" letter-spacing="-1" fill="#2d5200">Bivio</text>
+</svg>
