@@ -91,3 +91,24 @@
 .card-shadow-hover:hover {
   box-shadow: 0 4px 12px rgba(26,26,24,0.10), 0 8px 28px rgba(26,26,24,0.08);
 }
+
+/* ── Event page two-column grid ── */
+.event-content-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+/* Mobile: RSVP/carpool (right) floats up before desc/guests (left) */
+.event-col-left  { order: 2; }
+.event-col-right { order: 1; }
+
+@media (min-width: 720px) {
+  .event-content-grid {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 28px;
+    align-items: start;
+  }
+  .event-col-left  { order: 1; }
+  .event-col-right { order: 2; position: sticky; top: 76px; }
+}

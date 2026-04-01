@@ -9,25 +9,41 @@ import EventPublic from './pages/EventPublic'
 import EventJoin from './pages/EventJoin'
 import EventMatches from './pages/EventMatches'
 import EventConfirmed from './pages/EventConfirmed'
+import EventInvite from './pages/EventInvite'
+import EventEdit from './pages/EventEdit'
 import Dashboard from './pages/Dashboard'
+import EventRSVP from './pages/EventRSVP'
 
 const W = 960
 const col: React.CSSProperties = { maxWidth: W, width: '100%', margin: '0 auto' }
+
+import { DEV_BYPASS_AUTH } from './config'
 
 /* Pages where the full lavender bg looks intentional (no card padding needed) */
 const ROOT_PATHS = ['/', '/auth', '/events', '/events/new', '/profile']
 const isRoot = (p: string) => ROOT_PATHS.includes(p) || p.startsWith('/event/')
 
+const Spinner = () => (
+  <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}>
+    <div style={{ width: 20, height: 20, border: '2px solid var(--color-border)', borderTopColor: 'var(--color-violet)', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+  </div>
+)
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
   const location = useLocation()
-  if (loading) return (
-    <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}>
-      <div style={{ width: 20, height: 20, border: '2px solid var(--color-border)', borderTopColor: 'var(--color-violet)', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
-    </div>
-  )
+  if (DEV_BYPASS_AUTH) return <>{children}</>
+  if (loading) return <Spinner />
   if (!user) return <Navigate to={`/auth?redirect=${encodeURIComponent(location.pathname)}`} replace />
   return <>{children}</>
+}
+
+/** Root route: logged-in → home, anonymous → landing */
+function RootRoute() {
+  const { user, loading } = useAuth()
+  if (loading) return <Spinner />
+  if (user || DEV_BYPASS_AUTH) return <Navigate to="/events" replace />
+  return <Landing />
 }
 
 function AppShell() {
@@ -35,8 +51,9 @@ function AppShell() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const showBack = !isRoot(location.pathname) ||
-    (location.pathname.startsWith('/event/') && location.pathname.split('/').length > 3)
+  const showBack = (!isRoot(location.pathname) ||
+    (location.pathname.startsWith('/event/') && location.pathname.split('/').length > 3)) &&
+    !location.pathname.endsWith('/invite')
 
   const initial = profile?.name
     ? profile.name[0].toUpperCase()
@@ -171,9 +188,12 @@ function AppShell() {
           <Route path="/events" element={<ProtectedRoute><MyEvents /></ProtectedRoute>} />
           <Route path="/events/new" element={<EventCreate />} />
           <Route path="/event/:shortId" element={<EventPublic />} />
-          <Route path="/event/:shortId/join" element={<ProtectedRoute><EventJoin /></ProtectedRoute>} />
-          <Route path="/event/:shortId/matches" element={<ProtectedRoute><EventMatches /></ProtectedRoute>} />
-          <Route path="/event/:shortId/confirmed" element={<ProtectedRoute><EventConfirmed /></ProtectedRoute>} />
+          <Route path="/event/:shortId/rsvp" element={<EventRSVP />} />
+          <Route path="/event/:shortId/join" element={<EventJoin />} />
+          <Route path="/event/:shortId/invite" element={<ProtectedRoute><EventInvite /></ProtectedRoute>} />
+          <Route path="/event/:shortId/edit" element={<ProtectedRoute><EventEdit /></ProtectedRoute>} />
+          <Route path="/event/:shortId/matches" element={<EventMatches />} />
+          <Route path="/event/:shortId/confirmed" element={<EventConfirmed />} />
           <Route path="/event/:shortId/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         </Routes>
       </main>
@@ -186,7 +206,7 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          <Route path="/" element={<Landing />} />
+          <Route path="/" element={<RootRoute />} />
           <Route path="/*" element={<AppShell />} />
         </Routes>
       </AuthProvider>

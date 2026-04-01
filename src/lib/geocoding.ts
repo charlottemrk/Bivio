@@ -58,6 +58,41 @@ export function searchAddressDebounced(
   }, delay)
 }
 
+export type NearbyStation = {
+  name: string
+  type: 'train' | 'bus'
+  lat: number
+  lng: number
+  distanceKm: number
+}
+
+export async function findNearbyStations(lat: number, lng: number): Promise<NearbyStation[]> {
+  const query = `[out:json][timeout:15];(node["railway"~"station|halt"]["name"](around:50000,${lat},${lng});node["amenity"="bus_station"]["name"](around:50000,${lat},${lng}););out body;`
+  try {
+    const res = await fetch('https://overpass-api.de/api/interpreter', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'data=' + encodeURIComponent(query),
+    })
+    if (!res.ok) return []
+    const data = await res.json()
+    return (data.elements as any[])
+      .filter(el => el.tags?.name)
+      .map(el => ({
+        name: el.tags.name as string,
+        type: (el.tags.amenity === 'bus_station' ? 'bus' : 'train') as 'train' | 'bus',
+        lat: el.lat as number,
+        lng: el.lon as number,
+        distanceKm: Math.round(haversineDistance(lat, lng, el.lat, el.lon)),
+      }))
+      .sort((a, b) => a.distanceKm - b.distanceKm)
+      .filter((s, i, arr) => arr.findIndex(x => x.name === s.name) === i)
+      .slice(0, 5)
+  } catch {
+    return []
+  }
+}
+
 export function haversineDistance(
   lat1: number, lng1: number,
   lat2: number, lng2: number

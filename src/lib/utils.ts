@@ -4,6 +4,11 @@ export function generateShortId(): string {
   return nanoid(8)
 }
 
+export function generateShortCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  return Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
+}
+
 export function getInitials(name: string | null): string {
   if (!name) return '?'
   return name
