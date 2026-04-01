@@ -167,11 +167,12 @@ export default function EventPublic() {
     </div>
   )
 
-  const isOrganizer  = user?.id === event.organizer_id
-  const comingCount  = guests.length
-  const plusOneTotal = guests.filter(g => g.brings_plus_one).length
-  const totalPeople  = comingCount + plusOneTotal
-  const timeLabel    = event.time_start ? event.time_start.slice(0, 5) : null
+  const isOrganizer     = user?.id === event.organizer_id
+  const comingCount     = guests.length
+  const plusOneTotal    = guests.filter(g => g.brings_plus_one).length
+  const totalPeople     = comingCount + plusOneTotal
+  const timeLabel       = event.time_start ? event.time_start.slice(0, 5) : null
+  const covoitMatches   = guests.filter(g => g.match_status === 'confirmed' || g.match_status === 'accepted').length
 
   // Carpool state for this user
   const hasCarpool = !!(myReg?.drives_this_event || myReg?.departure_address)
@@ -429,8 +430,8 @@ export default function EventPublic() {
   return (
     <div className="animate-fade-up" style={{ paddingBottom: 40 }}>
 
-      {/* ── Cover image — full bleed above grid ── */}
-      {event.cover_image && (
+      {/* ── Cover image — full bleed, back button overlaid ── */}
+      {event.cover_image ? (
         <div style={{
           margin: '-20px -24px 24px',
           height: 240,
@@ -444,8 +445,33 @@ export default function EventPublic() {
           />
           <div style={{
             position: 'absolute', inset: 0,
-            background: 'linear-gradient(to top, rgba(0,0,0,0.35) 0%, transparent 60%)',
+            background: 'linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, transparent 40%), linear-gradient(to top, rgba(0,0,0,0.35) 0%, transparent 60%)',
           }} />
+          <button
+            onClick={() => navigate('/events')}
+            style={{
+              position: 'absolute', top: 16, left: 20,
+              background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(6px)',
+              border: 'none', cursor: 'pointer', borderRadius: 20,
+              fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.9)',
+              padding: '6px 14px', fontFamily: 'inherit',
+            }}
+          >
+            ← Mes événements
+          </button>
+        </div>
+      ) : (
+        <div style={{ paddingTop: 12, paddingBottom: 4 }}>
+          <button
+            onClick={() => navigate('/events')}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontSize: 13, fontWeight: 600, color: 'var(--color-text-3)',
+              padding: '4px 0', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4,
+            }}
+          >
+            ← Mes événements
+          </button>
         </div>
       )}
 
@@ -526,6 +552,47 @@ export default function EventPublic() {
           )}
         </div>
       </div>
+
+      {/* ── Invitee KPIs ── */}
+      {!isOrganizer && comingCount > 0 && (
+        <div style={{
+          display: 'flex', gap: 8, marginBottom: 24,
+        }}>
+          <div style={{
+            flex: 1, background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+            borderRadius: 14, padding: '12px 16px', textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--color-text)', lineHeight: 1 }}>
+              {totalPeople}
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--color-text-3)', fontWeight: 600, marginTop: 3 }}>
+              {totalPeople > 1 ? 'viennent' : 'vient'}
+            </div>
+          </div>
+          <div style={{
+            flex: 1, background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+            borderRadius: 14, padding: '12px 16px', textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 22, fontWeight: 900, color: covoitMatches > 0 ? 'var(--color-violet)' : 'var(--color-text)', lineHeight: 1 }}>
+              {covoitMatches}
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--color-text-3)', fontWeight: 600, marginTop: 3 }}>
+              covoit' matchés
+            </div>
+          </div>
+          <div style={{
+            flex: 1, background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+            borderRadius: 14, padding: '12px 16px', textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--color-text)', lineHeight: 1 }}>
+              {guests.filter(g => g.drives_this_event).length}
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--color-text-3)', fontWeight: 600, marginTop: 3 }}>
+              conducteurs
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Two-column grid ── */}
       <div className="event-content-grid">
