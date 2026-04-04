@@ -97,7 +97,7 @@ export default function EventMatches() {
 
   // ── Passenger meeting points (computed async) ────────────────────────────────
   const [passengerMeetings, setPassengerMeetings] = useState<Record<string, { loading: boolean; point: MeetingPoint | null }>>({})
-
+  const [passengerLoadingStep, setPassengerLoadingStep] = useState(0)
 
   // ── Passenger state ─────────────────────────────────────────────────────────
   const [matches, setMatches]           = useState<any[]>([])   // matched drivers
@@ -236,6 +236,21 @@ export default function EventMatches() {
     }, 1400)
     return () => clearInterval(interval)
   }, [rankingLoading])
+
+  // ── Passenger AI loading steps cycle ────────────────────────────────────────
+  const allMeetingsLoading = matches.length > 0
+    && Object.keys(passengerMeetings).length > 0
+    && Object.values(passengerMeetings).every(m => m.loading)
+
+  useEffect(() => {
+    if (!allMeetingsLoading) { setPassengerLoadingStep(0); return }
+    let idx = 0
+    const interval = setInterval(() => {
+      idx = (idx + 1) % 3
+      setPassengerLoadingStep(idx)
+    }, 1400)
+    return () => clearInterval(interval)
+  }, [allMeetingsLoading])
 
   // ── Load car info for driver ─────────────────────────────────────────────────
   useEffect(() => {
@@ -933,6 +948,71 @@ export default function EventMatches() {
           >
             ✏️ Modifier mon point de départ
           </Button>
+        </div>
+      ) : allMeetingsLoading ? (
+        /* ── Skeleton passager : en attente du calcul des pickups ── */
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {/* Carte skeleton principale — imite la vraie carte conducteur */}
+          {[0, 1].map(n => (
+            <div key={n} style={{
+              background: 'var(--color-surface)',
+              border: `2px solid ${n === 0 ? 'var(--color-violet)' : 'var(--color-border)'}`,
+              borderRadius: 20, overflow: 'hidden',
+              boxShadow: n === 0 ? '0 0 0 3px var(--color-violet-light)' : 'none',
+              opacity: n === 0 ? 1 : 0.5,
+            }}>
+              {/* Barre d'état IA — uniquement sur la 1re carte */}
+              {n === 0 && (
+                <div style={{
+                  background: 'var(--color-violet-light)', padding: '12px 16px',
+                  borderBottom: '1px solid var(--color-violet)',
+                }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-violet)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+                    Calcul en cours…
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                    {[
+                      '🗺️ Analyse des trajets',
+                      '📍 Calcul des points de pickup',
+                      '⭐ Tri par pertinence',
+                    ].map((step, i) => (
+                      <div key={i} style={{
+                        display: 'flex', alignItems: 'center', gap: 4,
+                        opacity: passengerLoadingStep === i ? 1 : 0.3,
+                        transition: 'opacity 0.4s',
+                      }}>
+                        {i > 0 && <span style={{ color: 'var(--color-violet)', opacity: 0.4, fontSize: 10 }}>→</span>}
+                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-violet)', whiteSpace: 'nowrap' }}>
+                          {step}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {/* Corps skeleton */}
+              <div style={{ padding: 18 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--color-border)', animation: 'pulse 1.5s ease-in-out infinite', flexShrink: 0 }} />
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ height: 15, width: '50%', borderRadius: 8, background: 'var(--color-border)', animation: 'pulse 1.5s ease-in-out infinite' }} />
+                    <div style={{ height: 12, width: '75%', borderRadius: 8, background: 'var(--color-border)', animation: 'pulse 1.5s ease-in-out infinite 0.15s' }} />
+                  </div>
+                  <div style={{ width: 44, height: 22, borderRadius: 8, background: 'var(--color-border)', animation: 'pulse 1.5s ease-in-out infinite 0.1s', flexShrink: 0 }} />
+                </div>
+                <div style={{ display: 'flex', gap: 16, marginBottom: 10 }}>
+                  {[40, 60, 50].map((w, i) => (
+                    <div key={i} style={{ height: 12, width: `${w}px`, borderRadius: 6, background: 'var(--color-border)', animation: `pulse 1.5s ease-in-out infinite ${i * 0.1}s` }} />
+                  ))}
+                </div>
+                <div style={{ height: 52, borderRadius: 10, background: 'var(--color-border)', animation: 'pulse 1.5s ease-in-out infinite 0.2s', marginBottom: 14 }} />
+                <div style={{ height: 44, borderRadius: 10, background: 'var(--color-border)', animation: 'pulse 1.5s ease-in-out infinite 0.3s' }} />
+              </div>
+            </div>
+          ))}
+          <div style={{ textAlign: 'center', fontSize: 12, color: 'var(--color-text-3)', marginTop: 4 }}>
+            Recherche des meilleurs points de rendez-vous sur ta route…
+          </div>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
