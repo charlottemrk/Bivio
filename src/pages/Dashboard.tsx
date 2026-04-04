@@ -68,7 +68,7 @@ export default function Dashboard() {
   const [guests, setGuests] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
-  const [guestFilter, setGuestFilter] = useState<'all' | 'rsvp' | 'covoit'>('all')
+  const [guestFilter, setGuestFilter] = useState<'all' | 'rsvp' | 'covoit' | 'arrivees'>('all')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
@@ -158,6 +158,25 @@ export default function Dashboard() {
   const displayedGuests = guestFilter === 'rsvp' ? rsvpOnly
     : guestFilter === 'covoit' ? inCovoit
     : [...rsvpOnly, ...inCovoit]
+
+  // Programme des arrivées — tous les invités coming, triés par heure estimée
+  const withArrival    = rsvpComing.filter(g => g.estimated_arrival_time && g.approval_status !== 'pending')
+  const withoutArrival = rsvpComing.filter(g => !g.estimated_arrival_time && g.approval_status !== 'pending')
+  const arrivalList = [
+    ...withArrival.sort((a: any, b: any) => a.estimated_arrival_time.localeCompare(b.estimated_arrival_time)),
+    ...withoutArrival,
+  ]
+
+  const covoitStatusLabel = (g: any) => {
+    if (!g.departure_address) return null
+    if (g.drives_this_event) {
+      const passengerCount = guests.filter(x => x.requested_driver_id === g.id && x.match_status === 'accepted').length
+      return passengerCount > 0 ? `🚗 Conduit · ${passengerCount} passager${passengerCount > 1 ? 's' : ''}` : '🚗 Conducteur'
+    }
+    if (g.status === 'confirmed' || g.match_status === 'accepted') return '✓ Covoit confirmé'
+    if (g.match_status === 'pending') return '⏳ En attente conducteur'
+    return '🔍 Cherche covoit'
+  }
 
   return (
     <div className="animate-fade-up" style={{ paddingTop: 8, paddingBottom: 40 }}>
@@ -390,8 +409,8 @@ export default function Dashboard() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
           <SectionTitle>Invités ({guests.filter(g => g.rsvp_status === 'coming').length})</SectionTitle>
           {/* Filter tabs */}
-          <div style={{ display: 'flex', gap: 4 }}>
-            {([['all', 'Tous'], ['rsvp', 'RSVP'], ['covoit', 'Covoit\'']] as const).map(([val, lbl]) => (
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+            {([['all', 'Tous'], ['rsvp', 'RSVP'], ['covoit', 'Covoit\''], ['arrivees', '🕐 Arrivées']] as const).map(([val, lbl]) => (
               <button key={val} onClick={() => setGuestFilter(val)} style={{
                 padding: '4px 10px', borderRadius: 8, fontSize: 11, fontWeight: 700,
                 background: guestFilter === val ? 'var(--color-violet)' : 'var(--color-bg)',
@@ -402,7 +421,83 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {displayedGuests.length === 0 ? (
+        {/* ── Vue arrivées ── */}
+        {guestFilter === 'arrivees' ? (
+          arrivalList.length === 0 ? (
+            <div style={{ padding: '24px 0', textAlign: 'center' }}>
+              <p style={{ fontSize: 14, color: 'var(--color-text-3)' }}>Aucun invité n'a encore renseigné son heure d'arrivée</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {arrivalList.map((g: any, i: number) => {
+                const name   = guestDisplayName(g)
+                const time   = g.estimated_arrival_time
+                const status = covoitStatusLabel(g)
+                const prevTime = i > 0 ? arrivalList[i - 1].estimated_arrival_time : null
+                const showDivider = time && time !== prevTime
+
+                return (
+                  <div key={g.id}>
+                    {/* Ligne horaire */}
+                    {showDivider && (
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        margin: '12px 0 6px',
+                      }}>
+                        <div style={{
+                          fontSize: 13, fontWeight: 800, color: 'var(--color-violet)',
+                          background: 'var(--color-violet-light)',
+                          borderRadius: 8, padding: '3px 10px', whiteSpace: 'nowrap',
+                        }}>
+                          {time.slice(0, 5)}
+                        </div>
+                        <div style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
+                      </div>
+                    )}
+                    {/* Ligne sans heure */}
+                    {!time && i === withArrival.length && (
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        margin: '12px 0 6px',
+                      }}>
+                        <div style={{
+                          fontSize: 12, fontWeight: 700, color: 'var(--color-text-3)',
+                          background: 'var(--color-surface-2)',
+                          borderRadius: 8, padding: '3px 10px', whiteSpace: 'nowrap',
+                        }}>
+                          Heure non renseignée
+                        </div>
+                        <div style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
+                      </div>
+                    )}
+                    {/* Invité */}
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      padding: '8px 0',
+                      borderBottom: '1px solid var(--color-border)',
+                    }}>
+                      <Avatar name={name} size={32} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text)' }}>{name}</div>
+                        {status && (
+                          <div style={{ fontSize: 12, color: 'var(--color-text-3)', marginTop: 1 }}>{status}</div>
+                        )}
+                      </div>
+                      {!time && (
+                        <span style={{ fontSize: 11, color: 'var(--color-text-3)', fontStyle: 'italic' }}>—</span>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+              {withArrival.length > 0 && (
+                <p style={{ fontSize: 11, color: 'var(--color-text-3)', marginTop: 12, textAlign: 'center' }}>
+                  {withArrival.length} invité{withArrival.length > 1 ? 's' : ''} avec heure · {withoutArrival.length} sans heure
+                </p>
+              )}
+            </div>
+          )
+        ) : displayedGuests.length === 0 ? (
           <div style={{ padding: '24px 0', textAlign: 'center' }}>
             <p style={{ fontSize: 14, color: 'var(--color-text-3)', marginBottom: 12 }}>Aucun invité pour le moment</p>
             <Button onClick={handleShare} variant="secondary" size="sm">Partager le lien</Button>

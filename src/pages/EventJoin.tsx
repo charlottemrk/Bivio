@@ -80,6 +80,9 @@ export default function EventJoin() {
   const [canRelay, setCanRelay]               = useState(false)
   const [specialNeeds, setSpecialNeeds]       = useState<string[]>([])
 
+  // ── Commun aux deux rôles ──
+  const [estimatedArrival, setEstimatedArrival] = useState('')
+
   useEffect(() => {
     if (!shortId) return
     supabase.from('events').select('id, name, organizer_id').eq('short_id', shortId).single().then(({ data }) => {
@@ -131,6 +134,7 @@ export default function EventJoin() {
         ? (departureTime || 'flexible')
         : (desiredArrival || availableFrom || 'flexible'),
       status: 'registered',
+      estimated_arrival_time: estimatedArrival || null,
     }
     // approval_status uniquement à la création, pas lors d'une mise à jour
     const carpoolInsert = { ...carpoolBase, approval_status: isOrganizer ? 'approved' : 'pending' }
@@ -423,6 +427,27 @@ export default function EventJoin() {
               </div>
             </Card>
           </>
+        )}
+
+        {/* ── Heure d'arrivée estimée (commun conducteur + passager) ── */}
+        {role && (
+          <Card>
+            <SectionLabel>À quelle heure penses-tu arriver ?</SectionLabel>
+            <p style={{ fontSize: 12, color: 'var(--color-text-3)', marginBottom: 10 }}>
+              Optionnel · aide l'organisateur à planifier l'accueil
+            </p>
+            <input
+              type="time"
+              value={estimatedArrival}
+              onChange={e => setEstimatedArrival(e.target.value)}
+              style={{
+                width: '100%', boxSizing: 'border-box', padding: '11px 14px',
+                fontSize: 16, border: '1.5px solid var(--color-border)',
+                borderRadius: 10, background: 'var(--color-surface)', color: 'var(--color-text)',
+                fontFamily: 'inherit', outline: 'none',
+              }}
+            />
+          </Card>
         )}
 
         {role && (
