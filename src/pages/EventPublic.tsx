@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { Avatar, AvatarStack } from '../components/Avatar'
 import { Button } from '../components/Button'
 import { formatDateRange } from '../lib/utils'
+import { DEV_BYPASS_AUTH } from '../config'
 
 type Event = {
   id: string; short_id: string; organizer_id: string; name: string; emoji: string
@@ -36,6 +37,8 @@ export default function EventPublic() {
   const [loading, setLoading]     = useState(true)
   const [myReg, setMyReg]         = useState<Guest | null>(null)
   const [copied, setCopied]       = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleting, setDeleting]               = useState(false)
 
   // Inline RSVP state
   const [showRsvpForm, setShowRsvpForm] = useState(false)
@@ -154,6 +157,15 @@ export default function EventPublic() {
     }
   }
 
+  const handleDelete = async () => {
+    if (!event) return
+    setDeleting(true)
+    await supabase.from('events').delete().eq('id', event.id)
+    setDeleting(false)
+    setShowDeleteModal(false)
+    navigate('/events', { replace: true })
+  }
+
   const guestDisplayName = (g: Guest) => (g.profiles as any)?.name || g.guest_name || 'Invité'
 
   if (loading) return (
@@ -167,7 +179,7 @@ export default function EventPublic() {
     </div>
   )
 
-  const isOrganizer     = user?.id === event.organizer_id
+  const isOrganizer     = user?.id === event.organizer_id || (DEV_BYPASS_AUTH && !user)
   const comingCount     = guests.length
   const plusOneTotal    = guests.filter(g => g.brings_plus_one).length
   const totalPeople     = comingCount + plusOneTotal
@@ -226,7 +238,7 @@ export default function EventPublic() {
         ) : (
           <>
             <Button onClick={() => navigate(`/event/${shortId}/join`)} size="lg" fullWidth>
-              Rejoindre le carpool de l'événement →
+              Rejoindre le carpool →
             </Button>
             <p style={{ fontSize: 12, color: 'var(--color-text-3)', textAlign: 'center', marginTop: 8, marginBottom: 0 }}>
               Trouve un conducteur ou propose des places
@@ -263,6 +275,23 @@ export default function EventPublic() {
           >
             {copied ? '✓ Lien copié !' : '📤 Partager l\'invitation'}
           </button>
+          {/* Danger zone */}
+          <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--color-border)' }}>
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              style={{
+                background: 'none', border: 'none', padding: 0,
+                fontSize: 13, color: '#c0392b', cursor: 'pointer',
+                fontFamily: 'inherit', fontWeight: 600,
+                display: 'flex', alignItems: 'center', gap: 6,
+                opacity: 0.75,
+              }}
+              onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+              onMouseLeave={e => (e.currentTarget.style.opacity = '0.75')}
+            >
+              🗑 Supprimer l'événement
+            </button>
+          </div>
         </>
       ) : rsvpAnswer ? (
         <>
@@ -553,46 +582,42 @@ export default function EventPublic() {
         </div>
       </div>
 
-      {/* ── Invitee KPIs ── */}
-      {!isOrganizer && comingCount > 0 && (
-        <div style={{
-          display: 'flex', gap: 8, marginBottom: 24,
-        }}>
-          <div style={{
-            flex: 1, background: 'var(--color-surface)', border: '1px solid var(--color-border)',
-            borderRadius: 14, padding: '12px 16px', textAlign: 'center',
+      {/* ── Event KPIs — always visible ── */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+        {[
+          {
+            value: totalPeople,
+            label: totalPeople === 1 ? 'vient' : 'viennent',
+            color: 'var(--color-text)',
+          },
+          {
+            value: covoitMatches,
+            label: "covoit' matchés",
+            color: covoitMatches > 0 ? 'var(--color-violet)' : 'var(--color-text)',
+          },
+          {
+            value: guests.filter(g => g.drives_this_event).length,
+            label: 'conducteurs',
+            color: 'var(--color-text)',
+          },
+        ].map(stat => (
+          <div key={stat.label} style={{
+            flex: 1,
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 14,
+            padding: '12px 16px',
+            textAlign: 'center',
           }}>
-            <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--color-text)', lineHeight: 1 }}>
-              {totalPeople}
+            <div style={{ fontSize: 22, fontWeight: 900, color: stat.color, lineHeight: 1 }}>
+              {stat.value}
             </div>
-            <div style={{ fontSize: 11, color: 'var(--color-text-3)', fontWeight: 600, marginTop: 3 }}>
-              {totalPeople > 1 ? 'viennent' : 'vient'}
+            <div style={{ fontSize: 12, color: 'var(--color-text-3)', fontWeight: 600, marginTop: 4 }}>
+              {stat.label}
             </div>
           </div>
-          <div style={{
-            flex: 1, background: 'var(--color-surface)', border: '1px solid var(--color-border)',
-            borderRadius: 14, padding: '12px 16px', textAlign: 'center',
-          }}>
-            <div style={{ fontSize: 22, fontWeight: 900, color: covoitMatches > 0 ? 'var(--color-violet)' : 'var(--color-text)', lineHeight: 1 }}>
-              {covoitMatches}
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--color-text-3)', fontWeight: 600, marginTop: 3 }}>
-              covoit' matchés
-            </div>
-          </div>
-          <div style={{
-            flex: 1, background: 'var(--color-surface)', border: '1px solid var(--color-border)',
-            borderRadius: 14, padding: '12px 16px', textAlign: 'center',
-          }}>
-            <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--color-text)', lineHeight: 1 }}>
-              {guests.filter(g => g.drives_this_event).length}
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--color-text-3)', fontWeight: 600, marginTop: 3 }}>
-              conducteurs
-            </div>
-          </div>
-        </div>
-      )}
+        ))}
+      </div>
 
       {/* ── Two-column grid ── */}
       <div className="event-content-grid">
@@ -601,19 +626,17 @@ export default function EventPublic() {
         <div className="event-col-left">
 
           {/* Description */}
-          {event.description && (
-            <div style={{
-              background: 'var(--color-surface)', border: '1px solid var(--color-border)',
-              borderRadius: 18, padding: '20px', marginBottom: 20,
-            }}>
-              <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
-                À propos
-              </div>
-              <p style={{ fontSize: 14, color: 'var(--color-text-2)', lineHeight: 1.7, whiteSpace: 'pre-wrap', margin: 0 }}>
-                {event.description}
-              </p>
+          <div style={{
+            background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+            borderRadius: 18, padding: '20px', marginBottom: 20,
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+              Description
             </div>
-          )}
+            <p style={{ fontSize: 14, color: event.description ? 'var(--color-text-2)' : 'var(--color-text-3)', lineHeight: 1.7, whiteSpace: 'pre-wrap', margin: 0, fontStyle: event.description ? 'normal' : 'italic' }}>
+              {event.description || 'Aucune description pour le moment.'}
+            </p>
+          </div>
 
           {/* Packing list */}
           {event.packing_list && event.packing_list.length > 0 && (
@@ -763,6 +786,82 @@ export default function EventPublic() {
         </div>
 
       </div>
+
+      {/* ── Delete confirmation modal ── */}
+      {showDeleteModal && (
+        <div
+          onClick={() => { if (!deleting) setShowDeleteModal(false) }}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 999,
+            background: 'rgba(26,26,24,0.55)',
+            display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+            padding: '0 0 env(safe-area-inset-bottom, 0)',
+            backdropFilter: 'blur(2px)',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: 'var(--color-bg)',
+              borderRadius: '24px 24px 0 0',
+              padding: '28px 24px 40px',
+              width: '100%', maxWidth: 480,
+              boxShadow: '0 -8px 40px rgba(26,26,24,0.18)',
+            }}
+          >
+            {/* Handle bar */}
+            <div style={{
+              width: 36, height: 4, borderRadius: 2,
+              background: 'var(--color-border)', margin: '0 auto 24px',
+            }} />
+
+            <div style={{ fontSize: 32, textAlign: 'center', marginBottom: 12 }}>🗑️</div>
+            <h2 style={{
+              fontSize: 18, fontWeight: 800, color: 'var(--color-text)',
+              textAlign: 'center', margin: '0 0 8px', lineHeight: 1.25,
+            }}>
+              Supprimer « {event.name} » ?
+            </h2>
+            <p style={{
+              fontSize: 14, color: 'var(--color-text-2)', textAlign: 'center',
+              margin: '0 0 28px', lineHeight: 1.5,
+            }}>
+              Cette action est irréversible. L'événement et toutes les inscriptions seront supprimés définitivement.
+            </p>
+
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              style={{
+                width: '100%', padding: '15px', borderRadius: 14,
+                fontSize: 15, fontWeight: 800, border: 'none',
+                background: deleting ? 'var(--color-border)' : '#c0392b',
+                color: '#fff', cursor: deleting ? 'not-allowed' : 'pointer',
+                fontFamily: 'inherit', marginBottom: 10,
+                transition: 'opacity 0.15s',
+                opacity: deleting ? 0.7 : 1,
+              }}
+            >
+              {deleting ? 'Suppression…' : 'Supprimer définitivement'}
+            </button>
+
+            <button
+              onClick={() => setShowDeleteModal(false)}
+              disabled={deleting}
+              style={{
+                width: '100%', padding: '13px', borderRadius: 14,
+                fontSize: 15, fontWeight: 700, border: '1.5px solid var(--color-border)',
+                background: 'none', color: 'var(--color-text-2)',
+                cursor: deleting ? 'not-allowed' : 'pointer',
+                fontFamily: 'inherit',
+              }}
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }

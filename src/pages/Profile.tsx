@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { Button } from '../components/Button'
@@ -11,9 +11,12 @@ const TRANSPORT_LABELS: Record<string, string> = { car: 'Voiture', train: 'Train
 
 export default function Profile() {
   const { user, profile, refreshProfile, signOut } = useAuth()
-  const [saving, setSaving]   = useState(false)
-  const [saved, setSaved]     = useState(false)
-  const [name, setName]       = useState('')
+  const [saving, setSaving]     = useState(false)
+  const [saved, setSaved]       = useState(false)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const avatarInputRef          = useRef<HTMLInputElement>(null)
+  const [name, setName]         = useState('')
   const [phone, setPhone]     = useState('')
   const [city, setCity]       = useState('')
   const [hasLicense, setHasLicense]               = useState(false)
@@ -32,8 +35,26 @@ export default function Profile() {
       setTransportModes(profile.transport_modes || ['car', 'train', 'bus'])
       setDefaultConstraints(profile.default_constraints || [])
       setShareContact(profile.share_contact)
+      setAvatarUrl(profile.avatar_url || null)
     }
   }, [profile])
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+    setUploadingAvatar(true)
+    const ext  = file.name.split('.').pop()
+    const path = `${user.id}/avatar.${ext}`
+    const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
+    if (!error) {
+      const { data } = supabase.storage.from('avatars').getPublicUrl(path)
+      const url = data.publicUrl + '?t=' + Date.now()
+      setAvatarUrl(url)
+      await supabase.from('profiles').update({ avatar_url: url }).eq('id', user.id)
+      await refreshProfile()
+    }
+    setUploadingAvatar(false)
+  }
 
   const toggle = (arr: string[], setArr: (v: string[]) => void, val: string) =>
     setArr(arr.includes(val) ? arr.filter(x => x !== val) : [...arr, val])
@@ -68,10 +89,45 @@ export default function Profile() {
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, paddingBottom: 24 }}>
-        <Avatar name={name} size={52} />
+        {/* Avatar cliquable */}
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <Avatar name={name} size={64} src={avatarUrl} />
+          <button
+            onClick={() => avatarInputRef.current?.click()}
+            disabled={uploadingAvatar}
+            style={{
+              position: 'absolute', bottom: -2, right: -2,
+              width: 24, height: 24, borderRadius: '50%',
+              background: 'var(--color-violet)', border: '2px solid var(--color-bg)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: uploadingAvatar ? 'not-allowed' : 'pointer',
+              fontSize: 12, lineHeight: 1,
+            }}
+            aria-label="Changer la photo"
+          >
+            {uploadingAvatar ? '…' : '📷'}
+          </button>
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={handleAvatarUpload}
+          />
+        </div>
         <div>
           <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--color-text)' }}>{name || 'Mon profil'}</div>
           <div style={{ fontSize: 13, color: 'var(--color-text-2)' }}>{user?.email}</div>
+          <button
+            onClick={() => avatarInputRef.current?.click()}
+            style={{
+              background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+              fontSize: 12, color: 'var(--color-violet)', fontWeight: 600,
+              fontFamily: 'inherit', marginTop: 2,
+            }}
+          >
+            {avatarUrl ? 'Changer la photo' : '+ Ajouter une photo'}
+          </button>
         </div>
       </div>
 

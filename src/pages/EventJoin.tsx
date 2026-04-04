@@ -6,6 +6,8 @@ import { Button } from '../components/Button'
 import { Pill } from '../components/Pill'
 import { AddressSearch } from '../components/AddressSearch'
 import { Card, SectionLabel } from '../components/Card'
+import { RoleChip } from '../components/RoleChip'
+import { Spinner } from '../components/Spinner'
 import type { GeoResult } from '../lib/geocoding'
 
 type Role = 'driver' | 'passenger' | null
@@ -33,7 +35,7 @@ function Toggle({ checked, onChange, label, sublabel, color = 'violet' }: {
     >
       <div>
         <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text)' }}>{label}</div>
-        {sublabel && <div style={{ fontSize: 12, color: 'var(--color-text-2)', marginTop: 2 }}>{sublabel}</div>}
+        {sublabel && <div style={{ fontSize: 12, color: 'var(--color-text-3)', marginTop: 2 }}>{sublabel}</div>}
       </div>
       <div style={{
         width: 22, height: 22, borderRadius: 6, flexShrink: 0,
@@ -51,10 +53,11 @@ export default function EventJoin() {
   const { shortId } = useParams()
   const navigate    = useNavigate()
   const { user, profile } = useAuth()
-  const [eventId, setEventId]     = useState<string | null>(null)
-  const [eventName, setEventName] = useState('')
-  const [saving, setSaving]       = useState(false)
-  const [loading, setLoading]     = useState(true)
+  const [eventId, setEventId]       = useState<string | null>(null)
+  const [eventName, setEventName]   = useState('')
+  const [organizerId, setOrganizerId] = useState<string | null>(null)
+  const [saving, setSaving]         = useState(false)
+  const [loading, setLoading]       = useState(true)
 
   // Step 1: role selection
   const [role, setRole] = useState<Role>(null)
@@ -79,8 +82,8 @@ export default function EventJoin() {
 
   useEffect(() => {
     if (!shortId) return
-    supabase.from('events').select('id, name').eq('short_id', shortId).single().then(({ data }) => {
-      if (data) { setEventId(data.id); setEventName(data.name) }
+    supabase.from('events').select('id, name, organizer_id').eq('short_id', shortId).single().then(({ data }) => {
+      if (data) { setEventId(data.id); setEventName(data.name); setOrganizerId(data.organizer_id) }
       setLoading(false)
     })
   }, [shortId])
@@ -115,7 +118,9 @@ export default function EventJoin() {
 
     const primaryGeo = role === 'driver' ? departureGeo : (pickupLocations[0]?.geo || null)
 
-    const carpool = {
+    // L'organisateur est auto-approuvé, les autres passent en 'pending'
+    const isOrganizer = user && organizerId && user.id === organizerId
+    const carpoolBase = {
       departure_address: primaryAddress,
       departure_lat: primaryGeo?.lat || null,
       departure_lng: primaryGeo?.lng || null,
@@ -127,6 +132,9 @@ export default function EventJoin() {
         : (desiredArrival || availableFrom || 'flexible'),
       status: 'registered',
     }
+    // approval_status uniquement à la création, pas lors d'une mise à jour
+    const carpoolInsert = { ...carpoolBase, approval_status: isOrganizer ? 'approved' : 'pending' }
+    const carpool = carpoolBase // pour les updates
 
     const anonToken = localStorage.getItem(`bivio_rsvp_${shortId}`)
 
@@ -136,7 +144,7 @@ export default function EventJoin() {
         await supabase.from('event_guests').update(carpool).eq('id', existing.id)
         localStorage.setItem(`bivio_guest_id_${shortId}`, existing.id)
       } else {
-        const { data } = await supabase.from('event_guests').insert({ event_id: eventId, profile_id: user.id, rsvp_status: 'coming', ...carpool }).select('id').single()
+        const { data } = await supabase.from('event_guests').insert({ event_id: eventId, profile_id: user.id, rsvp_status: 'coming', ...carpoolInsert }).select('id').single()
         if (data) localStorage.setItem(`bivio_guest_id_${shortId}`, data.id)
       }
     } else if (anonToken) {
@@ -147,7 +155,7 @@ export default function EventJoin() {
       }
     } else {
       const token = crypto.randomUUID()
-      const { data } = await supabase.from('event_guests').insert({ event_id: eventId, guest_token: token, rsvp_status: 'coming', ...carpool }).select('id').single()
+      const { data } = await supabase.from('event_guests').insert({ event_id: eventId, guest_token: token, rsvp_status: 'coming', ...carpoolInsert }).select('id').single()
       if (data) {
         localStorage.setItem(`bivio_rsvp_${shortId}`, token)
         localStorage.setItem(`bivio_guest_id_${shortId}`, data.id)
@@ -162,24 +170,29 @@ export default function EventJoin() {
     ? !!departureAddress
     : !!(pickupLocations[0]?.address)
 
-  if (loading) return <div style={{ textAlign: 'center', color: 'var(--color-text-3)', paddingTop: 64, fontSize: 14 }}>Chargement...</div>
+  if (loading) return <Spinner />
 
   return (
-    <div className="animate-fade-up" style={{ paddingTop: 8 }}>
-      {/* ── Back ── */}
-      <button
-        onClick={() => navigate(`/event/${shortId}`)}
-        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--color-text-3)', padding: '4px 0 12px', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}
-      >
-        ← L'événement
-      </button>
+    <div className="animate-fade-up" style={{ paddingTop: 32, paddingBottom: 80 }}>
 
-      <div style={{ paddingBottom: 20 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 900, color: 'var(--color-text)', marginBottom: 6, letterSpacing: '-0.5px' }}>
+      {/* ── Page header ── */}
+      <div style={{ paddingBottom: 24 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 900, color: 'var(--color-text)', marginBottom: 4, letterSpacing: '-0.5px' }}>
           Ton trajet
         </h1>
-        <p style={{ fontSize: 14, color: 'var(--color-text-2)' }}>
-          Pour <strong style={{ fontFamily: "'Instrument Serif', serif", fontStyle: 'italic', fontSize: 16, fontWeight: 400, color: 'var(--color-text)' }}>{eventName}</strong>
+        <p style={{ fontSize: 12, color: 'var(--color-text-3)', marginBottom: 2, marginTop: 8 }}>
+          Pour
+        </p>
+        <p style={{
+          fontFamily: "'Instrument Serif', serif",
+          fontStyle: 'italic',
+          fontSize: 20,
+          fontWeight: 400,
+          color: 'var(--color-text)',
+          margin: 0,
+          lineHeight: 1.2,
+        }}>
+          {eventName}
         </p>
       </div>
 
@@ -205,10 +218,17 @@ export default function EventJoin() {
               <div style={{ fontSize: 13, fontWeight: 800, color: role === opt.id ? 'var(--color-violet)' : 'var(--color-text)', lineHeight: 1.3 }}>
                 {opt.title}
               </div>
-              <div style={{ fontSize: 11, color: 'var(--color-text-3)', marginTop: 3 }}>{opt.sub}</div>
+              <div style={{ fontSize: 12, color: 'var(--color-text-3)', marginTop: 3 }}>{opt.sub}</div>
             </button>
           ))}
         </div>
+
+        {/* ── Role confirmation chip ── */}
+        {role && (
+          <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: 4 }}>
+            <RoleChip role={role === 'driver' ? 'driver' : 'passenger'} />
+          </div>
+        )}
 
         {/* ── Driver fields ── */}
         {role === 'driver' && (
@@ -270,13 +290,13 @@ export default function EventJoin() {
 
             <Card>
               <SectionLabel>Participation aux frais</SectionLabel>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                 <Pill selected={feePolicy === 'free'} onClick={() => setFeePolicy('free')}>Gratuit</Pill>
                 <Pill selected={feePolicy === 'shared'} onClick={() => setFeePolicy('shared')}>Partage des frais</Pill>
               </div>
               {feePolicy === 'free' && (
                 <>
-                  <p style={{ fontSize: 12, color: 'var(--color-text-2)', marginBottom: 8, fontWeight: 600 }}>
+                  <p style={{ fontSize: 12, color: 'var(--color-text-3)', marginBottom: 8, fontWeight: 600 }}>
                     Gratuit si trajet inférieur à :
                   </p>
                   <div style={{ display: 'flex', gap: 8 }}>
@@ -343,9 +363,9 @@ export default function EventJoin() {
 
             <Card>
               <SectionLabel>Horaires</SectionLabel>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <div>
-                  <p style={{ fontSize: 12, color: 'var(--color-text-2)', marginBottom: 6, fontWeight: 600 }}>
+                  <p style={{ fontSize: 12, color: 'var(--color-text-3)', marginBottom: 8, fontWeight: 600 }}>
                     Disponible à partir de
                   </p>
                   <input
@@ -361,7 +381,7 @@ export default function EventJoin() {
                   />
                 </div>
                 <div>
-                  <p style={{ fontSize: 12, color: 'var(--color-text-2)', marginBottom: 8, fontWeight: 600 }}>
+                  <p style={{ fontSize: 12, color: 'var(--color-text-3)', marginBottom: 8, fontWeight: 600 }}>
                     Heure d'arrivée souhaitée
                   </p>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -415,18 +435,6 @@ export default function EventJoin() {
             {saving ? 'Enregistrement...' : "Voir les options de covoit' →"}
           </Button>
         )}
-
-        <button
-          onClick={() => navigate(`/event/${shortId}`)}
-          style={{
-            width: '100%', padding: '12px', background: 'none',
-            border: '1.5px solid var(--color-border)', borderRadius: 12,
-            fontSize: 14, fontWeight: 600, color: 'var(--color-text-2)',
-            cursor: 'pointer', fontFamily: 'inherit', marginTop: 4,
-          }}
-        >
-          ← Retour à l'événement
-        </button>
       </div>
     </div>
   )

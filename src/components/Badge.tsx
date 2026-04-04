@@ -27,7 +27,7 @@ export function Badge({ children, variant = 'default', color }: Props) {
       ...style,
       display: 'inline-flex', alignItems: 'center', gap: 4,
       padding: '2px 8px', borderRadius: 8,
-      fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap',
+      fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap',
     }}>
       {children}
     </span>

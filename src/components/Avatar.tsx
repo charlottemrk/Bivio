@@ -18,11 +18,27 @@ type AvatarProps = {
   name?: string | null
   size?: number
   color?: string
+  src?: string | null
 }
 
-export function Avatar({ name, size = 36, color }: AvatarProps) {
+export function Avatar({ name, size = 36, color, src }: AvatarProps) {
   const letters = getInitials(name ?? null)
   const { bg, fg } = color ? { bg: `${color}22`, fg: color } : colorFor(name)
+
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={name || 'Photo'}
+        style={{
+          width: size, height: size, borderRadius: '50%', flexShrink: 0,
+          objectFit: 'cover', display: 'block',
+        }}
+        onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+      />
+    )
+  }
+
   return (
     <div style={{
       width: size, height: size, borderRadius: '50%', flexShrink: 0,

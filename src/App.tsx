@@ -13,6 +13,7 @@ import EventInvite from './pages/EventInvite'
 import EventEdit from './pages/EventEdit'
 import Dashboard from './pages/Dashboard'
 import EventRSVP from './pages/EventRSVP'
+import MatchDemo from './pages/MatchDemo'
 
 const W = 960
 const col: React.CSSProperties = { maxWidth: W, width: '100%', margin: '0 auto' }
@@ -157,7 +158,7 @@ function AppShell() {
       </header>
 
       {/* ── Page content ── */}
-      <main style={{ ...col, padding: '0 24px 80px' }}>
+      <main style={{ ...col, padding: '16px 24px 80px' }}>
         <Routes>
           <Route path="/auth" element={<Auth />} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
@@ -171,6 +172,7 @@ function AppShell() {
           <Route path="/event/:shortId/matches" element={<EventMatches />} />
           <Route path="/event/:shortId/confirmed" element={<EventConfirmed />} />
           <Route path="/event/:shortId/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/demo/matches" element={<MatchDemo />} />
         </Routes>
       </main>
     </div>

@@ -71,57 +71,52 @@ export default function MyEvents() {
     <div className="animate-fade-up">
 
       {/* ── Header ── */}
-      <div style={{
-        paddingTop: 32, paddingBottom: 24,
-        display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12,
-      }}>
-        <div>
+      <div style={{ paddingTop: 32, paddingBottom: 16 }}>
+
+        {/* Row 1: title + CTA */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
           <h1 style={{
-            fontSize: 28, fontWeight: 900, color: 'var(--color-text)',
-            letterSpacing: '-0.5px', lineHeight: 1.1, marginBottom: 14,
+            fontSize: 24, fontWeight: 900, color: 'var(--color-text)',
+            letterSpacing: '-0.5px', lineHeight: 1.1, margin: 0, flexShrink: 1,
           }}>
             Mes événements
           </h1>
-          <button
-            onClick={() => navigate('/events/new')}
-            style={{
-              padding: '8px 16px', borderRadius: 10, fontSize: 13, fontWeight: 700,
-              background: 'var(--color-violet)', color: 'white',
-              border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-            }}
-          >
-            + Créer un event
-          </button>
+          <div style={{ flexShrink: 0 }}>
+            <Button onClick={() => navigate('/events/new')} size="sm">
+              + Créer un event
+            </Button>
+          </div>
         </div>
 
-        {/* Toggle — top right, Luma-style */}
+        {/* Row 2: toggle right-aligned */}
         {all.length > 0 && (
-          <div style={{
-            display: 'flex', flexShrink: 0,
-            background: 'var(--color-surface)',
-            border: '1px solid var(--color-border)',
-            borderRadius: 10, padding: 3, gap: 2,
-            marginTop: 6,
-          }}>
-            {(['upcoming', 'past'] as const).map(t => {
-              const active = tab === t
-              return (
-                <button
-                  key={t}
-                  onClick={() => setTab(t)}
-                  style={{
-                    padding: '6px 13px', borderRadius: 7, fontSize: 12, fontWeight: 700,
-                    border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-                    background: active ? 'var(--color-text)' : 'transparent',
-                    color: active ? 'var(--color-bg)' : 'var(--color-text-3)',
-                    transition: 'all 0.15s',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {t === 'upcoming' ? 'À venir' : 'Passés'}
-                </button>
-              )
-            })}
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <div style={{
+              display: 'flex', flexShrink: 0,
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              borderRadius: 10, padding: 3, gap: 2,
+            }}>
+              {(['upcoming', 'past'] as const).map(t => {
+                const active = tab === t
+                return (
+                  <button
+                    key={t}
+                    onClick={() => setTab(t)}
+                    style={{
+                      padding: '6px 13px', borderRadius: 7, fontSize: 12, fontWeight: 700,
+                      border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+                      background: active ? 'var(--color-text)' : 'transparent',
+                      color: active ? 'var(--color-bg)' : 'var(--color-text-3)',
+                      transition: 'all 0.15s',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {t === 'upcoming' ? 'À venir' : 'Passés'}
+                  </button>
+                )
+              })}
+            </div>
           </div>
         )}
       </div>
@@ -140,8 +135,23 @@ export default function MyEvents() {
         </div>
       )}
       {all.length > 0 && list.length === 0 && (
-        <div style={{ textAlign: 'center', paddingTop: 40, color: 'var(--color-text-3)', fontSize: 14 }}>
-          {tab === 'upcoming' ? 'Aucun event à venir' : 'Aucun event passé'}
+        <div style={{ textAlign: 'center', paddingTop: 48, paddingBottom: 32 }}>
+          <div style={{ fontSize: 36, marginBottom: 12 }}>
+            {tab === 'upcoming' ? '🗓️' : '📦'}
+          </div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text)', marginBottom: 4 }}>
+            {tab === 'upcoming' ? 'Aucun event à venir' : 'Aucun event passé'}
+          </div>
+          {tab === 'upcoming' && (
+            <div style={{ fontSize: 13, color: 'var(--color-text-3)', marginBottom: 20 }}>
+              Crée un event ou attends d'être invité·e
+            </div>
+          )}
+          {tab === 'upcoming' && (
+            <Button onClick={() => navigate('/events/new')} size="sm">
+              + Créer un event
+            </Button>
+          )}
         </div>
       )}
 

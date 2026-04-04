@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { Card } from '../components/Card'
 import { Button } from '../components/Button'
 import { Avatar } from '../components/Avatar'
+import { Spinner } from '../components/Spinner'
 import { formatDateRange } from '../lib/utils'
 
 export default function EventConfirmed() {
@@ -34,11 +35,11 @@ export default function EventConfirmed() {
         myReg = data
       }
 
-      // Load the driver's details
+      // Load the driver's details (including car info for day-of)
       if (myReg?.requested_driver_id) {
         const { data: driverGuest } = await supabase
           .from('event_guests')
-          .select('*, profiles(name, phone, share_contact)')
+          .select('*, profiles(name, phone, share_contact, avatar_url)')
           .eq('id', myReg.requested_driver_id)
           .maybeSingle()
         if (driverGuest) {
@@ -52,32 +53,28 @@ export default function EventConfirmed() {
     load()
   }, [shortId, user])
 
-  if (loading) return (
-    <div style={{ textAlign: 'center', color: 'var(--color-text-3)', paddingTop: 64, fontSize: 14 }}>
-      Chargement...
-    </div>
-  )
+  if (loading) return <Spinner />
 
   const departureTime = driver?.preferred_arrival && driver.preferred_arrival !== 'flexible'
     ? driver.preferred_arrival
     : null
 
-  const driverName = driverProfile?.name || driver?.guest_name || 'Conducteur'
-  const driverPhone = driverProfile?.share_contact ? driverProfile?.phone : null
+  const driverName      = driverProfile?.name || driver?.guest_name || 'Conducteur'
+  const driverPhone     = driverProfile?.share_contact ? driverProfile?.phone : null
+  const driverAvatarUrl = driverProfile?.avatar_url || null
+  const driverCarPhoto  = driver?.car_photo_url || null
+  const driverCarDesc   = driver?.car_description || null
+
+  const labelStyle = {
+    fontSize: 12, fontWeight: 700, color: 'var(--color-text-3)',
+    textTransform: 'uppercase' as const, letterSpacing: '0.07em', marginBottom: 2,
+  }
 
   return (
-    <div className="animate-fade-up" style={{ paddingTop: 8 }}>
+    <div className="animate-fade-up" style={{ paddingTop: 32, paddingBottom: 80 }}>
 
-      {/* ── Back ── */}
-      <button
-        onClick={() => navigate(`/event/${shortId}`)}
-        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--color-text-3)', padding: '4px 0 8px', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}
-      >
-        ← L'événement
-      </button>
-
-      {/* Success */}
-      <div style={{ textAlign: 'center', paddingTop: 32, paddingBottom: 32 }}>
+      {/* ── Success hero ── */}
+      <div style={{ textAlign: 'center', paddingTop: 24, paddingBottom: 32 }}>
         <div style={{
           width: 68, height: 68, borderRadius: 22,
           background: 'var(--color-green-light)', color: 'var(--color-green)',
@@ -86,26 +83,33 @@ export default function EventConfirmed() {
         }}>
           ✓
         </div>
-        <h1 style={{ fontSize: 26, fontWeight: 900, color: 'var(--color-text)', marginBottom: 6, letterSpacing: '-0.5px' }}>
+        <h1 style={{ fontSize: 26, fontWeight: 900, color: 'var(--color-text)', marginBottom: 8, letterSpacing: '-0.5px' }}>
           Covoit' confirmé !
         </h1>
-        <p style={{ fontSize: 14, color: 'var(--color-text-2)', fontFamily: "'Instrument Serif', serif", fontStyle: 'italic' }}>
+        <p style={{
+          fontFamily: "'Instrument Serif', serif",
+          fontStyle: 'italic',
+          fontSize: 20,
+          fontWeight: 400,
+          color: 'var(--color-text)',
+          marginTop: 4,
+        }}>
           {event?.name}
         </p>
       </div>
 
-      {/* Driver info — the most important card */}
+      {/* ── Driver info ── */}
       {driver && (
         <div style={{
           background: 'var(--color-surface)',
           border: '2px solid var(--color-violet)',
           borderRadius: 18, padding: 20, marginBottom: 12,
         }}>
-          <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-violet)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-violet)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14 }}>
             🚗 Ton conducteur
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-            <Avatar name={driverName} size={48} />
+            <Avatar name={driverName} size={48} src={driverAvatarUrl} />
             <div>
               <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--color-text)' }}>{driverName}</div>
               {driverPhone && (
@@ -123,12 +127,12 @@ export default function EventConfirmed() {
               )}
             </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 14 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, fontSize: 14 }}>
             {driver.departure_address && (
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                 <span style={{ fontSize: 16, flexShrink: 0 }}>📍</span>
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-3)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 2 }}>Point de départ</div>
+                  <div style={labelStyle}>Point de départ</div>
                   <div style={{ fontWeight: 700, color: 'var(--color-text)' }}>{driver.departure_address}</div>
                 </div>
               </div>
@@ -137,18 +141,42 @@ export default function EventConfirmed() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ fontSize: 16, flexShrink: 0 }}>🕐</span>
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-3)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 2 }}>Heure de départ</div>
+                  <div style={labelStyle}>Heure de départ</div>
                   <div style={{ fontWeight: 700, color: 'var(--color-text)' }}>{departureTime}</div>
                 </div>
               </div>
             )}
           </div>
+
+          {/* ── Photo + description voiture (jour J) ── */}
+          {(driverCarPhoto || driverCarDesc) && (
+            <div style={{
+              marginTop: 14, paddingTop: 14,
+              borderTop: '1px solid var(--color-border)',
+            }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-text-3)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>
+                Reconnaître la voiture
+              </div>
+              {driverCarPhoto && (
+                <img
+                  src={driverCarPhoto}
+                  alt="Voiture du conducteur"
+                  style={{ width: '100%', borderRadius: 10, objectFit: 'cover', maxHeight: 180, marginBottom: driverCarDesc ? 10 : 0, display: 'block' }}
+                />
+              )}
+              {driverCarDesc && (
+                <p style={{ fontSize: 13, color: 'var(--color-text-2)', lineHeight: 1.5, margin: 0 }}>
+                  {driverCarDesc}
+                </p>
+              )}
+            </div>
+          )}
         </div>
       )}
 
-      {/* Event recap */}
+      {/* ── Event recap ── */}
       <Card style={{ marginBottom: 12 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+        <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
           L'événement
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -159,7 +187,7 @@ export default function EventConfirmed() {
             <div key={k} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
               <span style={{ fontSize: 16, flexShrink: 0 }}>{icon}</span>
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-3)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 1 }}>{k}</div>
+                <div style={labelStyle}>{k}</div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text)' }}>{v || '—'}</div>
               </div>
             </div>
@@ -167,7 +195,8 @@ export default function EventConfirmed() {
         </div>
       </Card>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 16 }}>
+      {/* ── Actions ── */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
         <Button onClick={() => navigate(`/event/${shortId}`)} size="lg" fullWidth>
           Voir la page de l'événement
         </Button>

@@ -90,6 +90,16 @@ export default function Dashboard() {
     load()
   }, [shortId, user])
 
+  const handleApproveGuest = async (guestId: string) => {
+    await supabase.from('event_guests').update({ approval_status: 'approved' }).eq('id', guestId)
+    setGuests(prev => prev.map(g => g.id === guestId ? { ...g, approval_status: 'approved' } : g))
+  }
+
+  const handleRejectGuest = async (guestId: string) => {
+    await supabase.from('event_guests').update({ approval_status: 'rejected' }).eq('id', guestId)
+    setGuests(prev => prev.filter(g => g.id !== guestId))
+  }
+
   const handleDelete = async () => {
     setDeleting(true)
     await supabase.from('event_guests').delete().eq('event_id', event.id)
@@ -118,11 +128,12 @@ export default function Dashboard() {
   const plusOneCount  = guests.filter(g => g.brings_plus_one).length
   const totalAttendees = rsvpComing.length + plusOneCount
 
-  const rsvpOnly   = rsvpComing.filter(g => !g.departure_address)
-  const inCovoit   = rsvpComing.filter(g => g.departure_address)
+  const pendingApproval = guests.filter(g => g.approval_status === 'pending')
+  const rsvpOnly   = rsvpComing.filter(g => !g.departure_address && g.approval_status !== 'pending')
+  const inCovoit   = rsvpComing.filter(g => g.departure_address && g.approval_status !== 'pending')
   const confirmed  = guests.filter(g => g.status === 'confirmed')
   const matched    = guests.filter(g => g.status === 'matched')
-  const drivers    = guests.filter(g => g.drives_this_event)
+  const drivers    = guests.filter(g => g.drives_this_event && g.approval_status !== 'pending')
   const passengers = inCovoit.filter(g => !g.drives_this_event)
   const pending    = passengers.filter(g => g.status === 'registered')
 
@@ -194,6 +205,59 @@ export default function Dashboard() {
               </span>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* ── Approbations en attente ── */}
+      {pendingApproval.length > 0 && (
+        <div style={{
+          background: 'var(--color-amber-light)', border: '1.5px solid var(--color-amber)',
+          borderRadius: 16, padding: '16px', marginBottom: 16,
+        }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-amber)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+            ⏳ {pendingApproval.length} demande{pendingApproval.length > 1 ? 's' : ''} en attente d'approbation
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {pendingApproval.map(g => {
+              const name = g.profiles?.name || g.guest_name || 'Invité'
+              return (
+                <div key={g.id} style={{
+                  background: 'var(--color-surface)', borderRadius: 12,
+                  padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10,
+                }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text)' }}>{name}</div>
+                    <div style={{ fontSize: 12, color: 'var(--color-text-3)', marginTop: 1 }}>
+                      {g.drives_this_event ? '🚗 Conducteur' : '🙋 Passager'}
+                      {g.departure_address ? ` · ${g.departure_address.split(',')[0]}` : ''}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleRejectGuest(g.id)}
+                    style={{
+                      padding: '8px 12px', borderRadius: 8, border: '1.5px solid var(--color-border)',
+                      background: 'none', fontSize: 12, fontWeight: 700,
+                      color: 'var(--color-text-3)', cursor: 'pointer', fontFamily: 'inherit',
+                      minHeight: 36,
+                    }}
+                  >
+                    Refuser
+                  </button>
+                  <button
+                    onClick={() => handleApproveGuest(g.id)}
+                    style={{
+                      padding: '8px 14px', borderRadius: 8, border: 'none',
+                      background: 'var(--color-green)', fontSize: 12, fontWeight: 700,
+                      color: '#fff', cursor: 'pointer', fontFamily: 'inherit',
+                      minHeight: 36,
+                    }}
+                  >
+                    ✓ Approuver
+                  </button>
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
 

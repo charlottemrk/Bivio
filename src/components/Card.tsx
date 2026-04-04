@@ -30,7 +30,7 @@ export function Card({ children, style, onClick, padding = 16 }: Props) {
 
 export function SectionLabel({ children }: { children: ReactNode }) {
   return (
-    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
+    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>
       {children}
     </div>
   )

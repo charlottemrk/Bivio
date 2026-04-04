@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { ReactNode, CSSProperties } from 'react'
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger'
@@ -6,7 +7,7 @@ type Size    = 'sm' | 'md' | 'lg'
 const BASE: CSSProperties = {
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
   fontFamily: 'inherit', fontWeight: 700, cursor: 'pointer', border: 'none',
-  transition: 'opacity 0.15s, transform 0.1s',
+  transition: 'opacity 0.15s, transform 0.1s, filter 0.15s',
   WebkitTapHighlightColor: 'transparent',
 }
 
@@ -35,11 +36,23 @@ type Props = {
 }
 
 export function Button({ children, onClick, disabled, type = 'button', variant = 'primary', size = 'md', fullWidth, style }: Props) {
+  const [hovered, setHovered] = useState(false)
+
+  const hoverStyle: CSSProperties = !disabled && hovered ? (
+    variant === 'primary'
+      ? { opacity: 0.88 }
+      : variant === 'danger'
+        ? { filter: 'brightness(0.96)' }
+        : { background: 'var(--color-surface-2)' }
+  ) : {}
+
   return (
     <button
       type={type}
       onClick={onClick}
       disabled={disabled}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
         ...BASE,
         ...VARIANTS[variant],
@@ -47,6 +60,7 @@ export function Button({ children, onClick, disabled, type = 'button', variant =
         width: fullWidth ? '100%' : undefined,
         opacity: disabled ? 0.45 : 1,
         cursor: disabled ? 'not-allowed' : 'pointer',
+        ...hoverStyle,
         ...style,
       }}
     >

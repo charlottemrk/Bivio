@@ -34,6 +34,15 @@
   --color-border:         #e0ddd6;
   --color-border-2:       #ccc8bf;
 
+  /* ── Spacing scale (8px grid) ── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
   /* ── Typography ── */
   --font-sans:            'DM Sans', system-ui, sans-serif;
   --font-serif:           'Instrument Serif', Georgia, serif;
@@ -83,6 +92,11 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 .animate-fade-up { animation: fadeUp 0.22s ease-out both; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
 
 /* ── Card shadow ── */
 .card-shadow {
