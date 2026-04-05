@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { Avatar } from './components/Avatar'
 import Landing from './pages/Landing'
 import Auth from './pages/Auth'
 import Profile from './pages/Profile'
@@ -20,9 +21,6 @@ const col: React.CSSProperties = { maxWidth: W, width: '100%', margin: '0 auto' 
 
 import { DEV_BYPASS_AUTH } from './config'
 
-/* Pages where the full lavender bg looks intentional (no card padding needed) */
-const ROOT_PATHS = ['/', '/auth', '/events', '/events/new', '/profile']
-const isRoot = (p: string) => ROOT_PATHS.includes(p) || p.startsWith('/event/')
 
 const Spinner = () => (
   <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}>
@@ -52,14 +50,6 @@ function AppShell() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const showBack = (!isRoot(location.pathname) ||
-    (location.pathname.startsWith('/event/') && location.pathname.split('/').length > 3)) &&
-    !location.pathname.endsWith('/invite')
-
-  const initial = profile?.name
-    ? profile.name[0].toUpperCase()
-    : user?.email?.[0].toUpperCase() ?? '?'
-
   return (
     <div style={{ minHeight: '100vh', width: '100%', background: 'var(--color-bg)' }}>
 
@@ -73,25 +63,8 @@ function AppShell() {
       }}>
         <div style={{ ...col, padding: '0 24px', height: 60, display: 'flex', alignItems: 'center', gap: 16 }}>
 
-          {/* Left: back arrow + logo */}
+          {/* Left: logo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1 }}>
-            {showBack && (
-              <button
-                onClick={() => navigate(-1)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 5,
-                  fontSize: 14, fontWeight: 500, color: 'var(--color-text-2)',
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  padding: '6px 10px 6px 4px', borderRadius: 8, fontFamily: 'inherit',
-                }}
-              >
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                  <path d="M11 14L6 9l5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                Retour
-              </button>
-            )}
-
             <button
               onClick={() => navigate('/')}
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
@@ -133,13 +106,15 @@ function AppShell() {
                 onClick={() => navigate('/profile')}
                 aria-label="Mon profil"
                 style={{
-                  width: 36, height: 36, borderRadius: '50%',
-                  background: 'var(--color-violet-light)', color: 'var(--color-violet)',
-                  fontWeight: 800, fontSize: 14, border: 'none', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                  borderRadius: '50%', display: 'flex', alignItems: 'center',
                 }}
               >
-                {initial}
+                <Avatar
+                  name={profile?.name || user.email}
+                  size={34}
+                  src={profile?.avatar_url || null}
+                />
               </button>
             ) : (
               <button
@@ -175,6 +150,67 @@ function AppShell() {
           <Route path="/demo/matches" element={<MatchDemo />} />
         </Routes>
       </main>
+
+      {/* ── Bottom navigation (mobile only, logged-in) ── */}
+      {user && (
+        <nav className="bottom-nav">
+          {[
+            {
+              path: '/events',
+              label: 'Mes events',
+              icon: (active: boolean) => (
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                  <rect x="3" y="5" width="16" height="14" rx="2.5" stroke="currentColor" strokeWidth="1.7"/>
+                  <path d="M7 3v4M15 3v4M3 10h16" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/>
+                  {active && <circle cx="11" cy="15" r="1.5" fill="currentColor"/>}
+                </svg>
+              ),
+            },
+            {
+              path: '/events/new',
+              label: 'Créer',
+              icon: (_active: boolean) => (
+                <div style={{
+                  width: 40, height: 40, borderRadius: 14,
+                  background: 'var(--color-violet)', color: 'white',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 22, fontWeight: 300, lineHeight: 1,
+                  boxShadow: '0 2px 8px rgba(124,196,0,0.35)',
+                  marginTop: -10,
+                }}>
+                  +
+                </div>
+              ),
+            },
+            {
+              path: '/profile',
+              label: 'Profil',
+              icon: (_active: boolean) => (
+                <Avatar name={profile?.name || user.email} size={26} src={profile?.avatar_url || null} />
+              ),
+            },
+          ].map(({ path, label, icon }) => {
+            const active = location.pathname === path
+            return (
+              <button
+                key={path}
+                onClick={() => navigate(path)}
+                className="bottom-nav-item"
+                aria-label={label}
+                style={{ color: active ? 'var(--color-violet)' : 'var(--color-text-3)' }}
+              >
+                {icon(active)}
+                <span style={{
+                  fontSize: 10, fontWeight: active ? 700 : 500,
+                  marginTop: 3, lineHeight: 1,
+                }}>
+                  {label}
+                </span>
+              </button>
+            )
+          })}
+        </nav>
+      )}
     </div>
   )
 }

@@ -77,7 +77,13 @@
   }
 
   input, button, textarea, select { font-family: inherit; }
-  input:focus, textarea:focus, select:focus { outline: none; }
+  input:focus-visible, textarea:focus-visible, select:focus-visible {
+    outline: 2px solid var(--color-violet);
+    outline-offset: 2px;
+  }
+  input:focus:not(:focus-visible), textarea:focus:not(:focus-visible), select:focus:not(:focus-visible) {
+    outline: none;
+  }
   ::placeholder { color: var(--color-text-3); }
   button { -webkit-tap-highlight-color: transparent; }
 }
@@ -98,12 +104,65 @@
   50%       { opacity: 0.4; }
 }
 
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* ── Card shadow ── */
 .card-shadow {
   box-shadow: 0 1px 3px rgba(26,26,24,0.06), 0 4px 16px rgba(26,26,24,0.07);
 }
 .card-shadow-hover:hover {
   box-shadow: 0 4px 12px rgba(26,26,24,0.10), 0 8px 28px rgba(26,26,24,0.08);
+}
+
+/* ── Bottom navigation (mobile only) ── */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 8px 0 max(12px, env(safe-area-inset-bottom));
+  background: rgba(245, 243, 238, 0.96);
+  border-top: 1px solid var(--color-border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  min-height: 44px;
+  padding: 4px 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bottom-nav-item:focus-visible {
+  outline: 2px solid var(--color-violet);
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+
+/* Hide bottom nav on desktop */
+@media (min-width: 640px) {
+  .bottom-nav { display: none; }
 }
 
 /* ── Event page two-column grid ── */

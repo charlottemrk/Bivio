@@ -19,7 +19,7 @@ const TYPE_COLORS: Record<string, string> = {
 }
 
 export default function MyEvents() {
-  const { user, profile } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [organized, setOrganized] = useState<EventRow[]>([])
   const [joined, setJoined]       = useState<EventRow[]>([])
@@ -55,15 +55,31 @@ export default function MyEvents() {
   const upcoming = all.filter(e => new Date(e.date_start) >= now).sort((a, b) => new Date(a.date_start).getTime() - new Date(b.date_start).getTime())
   const past     = all.filter(e => new Date(e.date_start) < now).sort((a, b) => new Date(b.date_start).getTime() - new Date(a.date_start).getTime())
 
-  const firstName = profile?.name?.split(' ')[0] || (DEV_BYPASS_AUTH ? 'Dev' : 'toi')
-  const hour = new Date().getHours()
-  const greeting = hour < 18 ? 'Bonjour' : 'Bonsoir'
-
   const list = tab === 'upcoming' ? upcoming : past
 
   if (loading) return (
-    <div style={{ textAlign: 'center', color: 'var(--color-text-3)', paddingTop: 64, fontSize: 14 }}>
-      Chargement...
+    <div className="animate-fade-up" style={{ paddingTop: 32 }}>
+      {/* Header skeleton */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
+        <div style={{ width: 160, height: 28, borderRadius: 8, background: 'var(--color-border)', animation: 'pulse 1.4s ease-in-out infinite' }} />
+        <div style={{ width: 110, height: 32, borderRadius: 10, background: 'var(--color-border)', animation: 'pulse 1.4s ease-in-out infinite' }} />
+      </div>
+      {/* Card skeletons */}
+      {[0, 1, 2].map(i => (
+        <div key={i} style={{ display: 'flex', gap: 0, marginBottom: 12 }}>
+          <div style={{ width: 58, flexShrink: 0, paddingTop: 20 }}>
+            <div style={{ width: 32, height: 24, borderRadius: 6, background: 'var(--color-border)', animation: 'pulse 1.4s ease-in-out infinite', animationDelay: `${i * 0.1}s` }} />
+          </div>
+          <div style={{ width: 20, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 28 }}>
+            <div style={{ width: 9, height: 9, borderRadius: '50%', background: 'var(--color-border)' }} />
+          </div>
+          <div style={{
+            flex: 1, marginLeft: 10, height: 96, borderRadius: 18,
+            background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+            animation: 'pulse 1.4s ease-in-out infinite', animationDelay: `${i * 0.1}s`,
+          }} />
+        </div>
+      ))}
     </div>
   )
 
